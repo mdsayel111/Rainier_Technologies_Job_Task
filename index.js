@@ -1,23 +1,36 @@
 const express = require("express");
 require("dotenv").config();
 const bcrypt = require("bcrypt");
+const { courseCollection, userCollection } = require("./DB.config");
+const { verifyToken, verifyAdmin } = require("./utils");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
-const fun = async () => {
-  const hashedPassword = await bcrypt.hash("sayel111", 10);
-  // console.log(hashedPassword);
-  const isMatchPassword = await bcrypt.compare(
-    "sayel111",
-    "$2b$10$I8F5VvK5T1M0vPsj4i..guF.uoYlOz5iVCUXm39KzhH6hIRjtZoKe"
-  );
-  console.log(isMatchPassword);
-};
+// const fun = async () => {
+//   const hashedPassword = await bcrypt.hash("sayel111", 10);
+//   // console.log(hashedPassword);
+//   const isMatchPassword = await bcrypt.compare(
+//     "sayel111",
+//     "$2b$10$I8F5VvK5T1M0vPsj4i..guF.uoYlOz5iVCUXm39KzhH6hIRjtZoKe"
+//   );
+//   console.log(isMatchPassword);
+// };
 
-fun();
+// fun();
 
 const app = express();
 const port = 5000;
 
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: ["*"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -25,29 +38,15 @@ app.use((err, req, res, next) => {
     // Handle JSON parse error
     return res.status(500).json({ error: "Your JSON is not valid" });
   }
-});
-
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.BD_UserName}:${process.env.DB_Password}@cluster0.zje3wdr.mongodb.net/?retryWrites=true&w=majority`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+  next();
 });
 
 async function run() {
-  const courseCollection = client
-    .db("Rainier_Technologies_Job_Task")
-    .collection("Courses");
-
   try {
     // User API
-    app.get("/api/v1/course", async (req, res) => {
+    app.get("/api/v1/course", verifyToken, verifyAdmin, async (req, res) => {
       try {
+        console.log("object");
         const courses = await courseCollection.find({}).toArray();
         res.send(courses);
       } catch (err) {
@@ -67,7 +66,25 @@ async function run() {
     });
 
     app.get("/api/v1/login", async (req, res) => {
-      // const
+      try {
+        const { email, password } = req.body;
+        const user = await userCollection.findOne({ email: email });
+        if (user) {
+          const isPasswordMatch = await bcrypt.compare(password, user.password);
+          if (isPasswordMatch) {
+            const token = jwt.sign({ email }, process.env.Secret, {
+              expiresIn: "1d",
+            });
+            res
+              .cookie("token", token, { httpOnly: true, secure: true })
+              .send({ massage: "LogIn successful" });
+          }
+        } else {
+          res.status(404).send({ massage: "user not found" });
+        }
+      } catch (err) {
+        res.status(500).send({ massage: "Internal Server Error" });
+      }
     });
 
     // Admin API
