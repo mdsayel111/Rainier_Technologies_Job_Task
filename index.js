@@ -87,6 +87,23 @@ async function run() {
       }
     });
 
+    app.post("/api/v1/signup", async (req, res) => {
+      try {
+        const { email, password, role } = req.body;
+        const isUserInDB = userCollection.findOne({ email: email });
+        if (!isUserInDB) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          const newUser = { email, hashedPassword, role };
+          const user = await userCollection.insertOne(newUser);
+          res.send({ massage: "SignUp successful" });
+        }else{
+          res.send({massage: "You already have an account"})
+        }
+      } catch (err) {
+        res.status(500).send({ massage: "Internal Server Error" });
+      }
+    });
+
     // Admin API
     app.post("/api/v1/admin/course", async (req, res) => {
       try {
