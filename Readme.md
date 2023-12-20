@@ -1,6 +1,6 @@
 
 # How to use
-# Data must be valid JSON
+## Data must be valid JSON
 ## Signup API
 You need to Signup with your email, password and role, like this:
 
@@ -34,3 +34,12 @@ to use admin API you need a user with role admin. If you don't have any user wit
 ```
 ## Other API
 You must use the token you got when you singup or login. You need to send token by cookie and you can use API with GET, POST, PATCH, DELETE method...
+
+## Live API
+https://rainier-technologies-job-task.vercel.app/api/v1/signup \
+https://rainier-technologies-job-task.vercel.app/api/v1/login \
+https://rainier-technologies-job-task.vercel.app/api/v1/course \
+https://rainier-technologies-job-task.vercel.app/api/v1/course/:id \
+https://rainier-technologies-job-task.vercel.app/api/v1/admin/course \
+https://rainier-technologies-job-task.vercel.app/api/v1/admin/course/:id \
+https://rainier-technologies-job-task.vercel.app/api/v1/admin/course/:id

@@ -6,18 +6,7 @@ const { verifyToken, verifyAdmin } = require("./utils");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-
-// const fun = async () => {
-//   const hashedPassword = await bcrypt.hash("sayel111", 10);
-//   // console.log(hashedPassword);
-//   const isMatchPassword = await bcrypt.compare(
-//     "sayel111",
-//     "$2b$10$I8F5VvK5T1M0vPsj4i..guF.uoYlOz5iVCUXm39KzhH6hIRjtZoKe"
-//   );
-//   console.log(isMatchPassword);
-// };
-
-// fun();
+const { ObjectId } = require("mongodb");
 
 const app = express();
 const port = 5000;
@@ -46,7 +35,6 @@ async function run() {
     // User API
     app.get("/api/v1/course", verifyToken, async (req, res) => {
       try {
-        console.log("object");
         const courses = await courseCollection.find({}).toArray();
         res.send(courses);
       } catch (err) {
@@ -61,6 +49,7 @@ async function run() {
         const singleCourse = await courseCollection.findOne(query);
         res.status(200).send(singleCourse);
       } catch (err) {
+        console.log(err);
         res.status(500).send({ massage: "Internal Server Error" });
       }
     });
@@ -70,7 +59,7 @@ async function run() {
         const { email, password } = req.body;
         const user = await userCollection.findOne({ email: email });
         if (user) {
-          const isPasswordMatch = await bcrypt.compare(password, user.password);
+          const isPasswordMatch = await bcrypt.compare(password, user.hashedPassword);
           if (isPasswordMatch) {
             const token = jwt.sign({ email }, process.env.Secret, {
               expiresIn: "1d",
@@ -83,6 +72,7 @@ async function run() {
           res.status(404).send({ massage: "user not found" });
         }
       } catch (err) {
+        console.log(err);
         res.status(500).send({ massage: "Internal Server Error" });
       }
     });
@@ -90,14 +80,14 @@ async function run() {
     app.post("/api/v1/signup", async (req, res) => {
       try {
         const { email, password, role } = req.body;
-        const isUserInDB = userCollection.findOne({ email: email });
+        const isUserInDB = await userCollection.findOne({ email: email });
         if (!isUserInDB) {
           const hashedPassword = await bcrypt.hash(password, 10);
           const newUser = { email, hashedPassword, role };
           const user = await userCollection.insertOne(newUser);
           res.send({ massage: "SignUp successful" });
-        }else{
-          res.send({massage: "You already have an account"})
+        } else {
+          res.send({ massage: "You already have an account" });
         }
       } catch (err) {
         res.status(500).send({ massage: "Internal Server Error" });
