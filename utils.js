@@ -18,7 +18,7 @@ const verifyToken = (req, res, next) => {
     } else {
       res
         .status(401)
-        .send({ massage: "unauthorized access, please send req with token" });
+        .send({ massage: "unauthorized access, please send req with valid token" });
     }
   });
 };

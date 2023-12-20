@@ -44,7 +44,7 @@ app.use((err, req, res, next) => {
 async function run() {
   try {
     // User API
-    app.get("/api/v1/course", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/api/v1/course", verifyToken, async (req, res) => {
       try {
         console.log("object");
         const courses = await courseCollection.find({}).toArray();
@@ -54,7 +54,7 @@ async function run() {
       }
     });
 
-    app.get("/api/v1/course/:id", async (req, res) => {
+    app.get("/api/v1/course/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
